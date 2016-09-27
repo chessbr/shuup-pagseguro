@@ -1,0 +1,7 @@
+
+{% for payment in pagseguro.payments %}
+    <div id="payment-{{ payment.pk }}">
+        {%- include "pagseguro/admin/payment_detail.jinja" with context %}
+    </div>
+    <hr>
+{% endfor %}

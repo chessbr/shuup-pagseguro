@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<payment>
+    <currency>BRL</currency>
+
+    {% if service.choice_identifier == PagSeguroPaymentMethod.BOLETO.value %}
+    <method>boleto</method>
+    {% elif service.choice_identifier == PagSeguroPaymentMethod.ONLINE_DEBIT.value %}
+    <method>eft</method>
+    {% endif %}
+
+    <mode>default</mode>
+
+    <items>
+        {%- for order_line in lines %}
+        <item>
+            <id>{{ order_line.ordering }}</id>
+            <description>{{ order_line.text }}</description>
+            <amount>{{ '%0.2f'|format(order_line.base_unit_price_value|float) }}</amount>
+            <quantity>{{ order_line.quantity|int }}</quantity>
+        </item>
+        {% endfor -%}
+    </items>
+
+    <reference>{{ order.identifier }}</reference>
+
+    <extraAmount>{{ '%0.2f'|format(extra_amount|float) }}</extraAmount>
+
+    <sender>
+        <name>{{ order.customer.name }}</name>
+        <email>{{ order.email }}</email>
+
+        {% if customer_cpf or customer_cnpj %}
+        <documents>
+            <document>
+                {%- if customer_cpf %}
+                <type>CPF</type>
+                <value>{{ customer_cpf }}</value>
+                {%- elif customer_cnpj -%}
+                <type>CNPJ</type>
+                <value>{{ customer_cnpj }}</value>
+                {% endif -%}
+            </document>
+        </documents>
+        {% endif %}
+
+        {#- O telefone deve ser valido com DD contendo 2 digitos e o numero entre 7 e 9 digitos -#}
+        {%- if phone_area_code|length == 2 and phone_number|length >= 7 and phone_number|length <= 9 %}
+        <phone>
+            <areaCode>{{ phone_area_code|int }}</areaCode>
+            <number>{{ phone_number|int }}</number>
+        </phone>
+        {% endif -%}
+
+        <hash>{{ order.payment_data.pagseguro.sender_hash }}</hash>
+    </sender>
+
+    <shipping>
+        <type>3</type>
+        <address>
+            <street>{{ order.shipping_address.street }}</street>
+            {%- if order.shipping_address.extra and order.shipping_address.extra.numero %}
+            <number>{{ order.shipping_address.extra.numero }}</number>
+            {% endif -%}
+            <complement>{{ order.shipping_address.street2 }}</complement>
+            <district>{{ order.shipping_address.street3 }}</district>
+            <postalCode>{{ postal_code }}</postalCode>
+            <city>{{ order.shipping_address.city }}</city>
+            <state>{{ order.shipping_address.region }}</state>
+            <country>BRA</country>
+        </address>
+    </shipping>
+
+    {% if service.choice_identifier == PagSeguroPaymentMethod.ONLINE_DEBIT.value %}
+    <bank>
+        <name>{{ order.payment_data.pagseguro.bank_name }}</name>
+    </bank>
+    {% endif %}
+
+</payment>

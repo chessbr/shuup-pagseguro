@@ -1,0 +1,89 @@
+<table class="table">
+    <caption class="text-center bg-primary">{{ _("Transaction:") }} <strong>{{ payment.code }}</strong></caption>
+    <tr>
+        <td>{{ _("Status") }}</td>
+        <td class="text-success">
+            <strong>{{ pagseguro.PagSeguroTransactionStatus(payment.data.transaction.status|int) }}</strong>
+        </td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Last update") }}</td>
+        <td class="text-primary">{{ payment.last_update|datetime(format="short") }}</td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Last event") }}</td>
+        <td>{{ pagseguro.iso8601.parse_date(payment.data.transaction.lastEventDate)|datetime(format="short") }}</td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Creation date") }}</td>
+        <td>{{ pagseguro.iso8601.parse_date(payment.data.transaction.date)|datetime(format="short") }}</td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Escrow end date") }}</td>
+        <td class="text-success">
+            {% if payment.data.transaction.escrowEndDate %}
+                {{ pagseguro.iso8601.parse_date(payment.data.transaction.escrowEndDate)|datetime(format="short") }}
+            {% endif %}
+        </td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Payment method") }}</td>
+        <td class="text-warning">
+            {% if pagseguro.PagSeguroPaymentMethodCode.__dict__["_value2member_map_"].get(payment.data.transaction.paymentMethod.code|int) %}
+                {{ pagseguro.PagSeguroPaymentMethodCode(payment.data.transaction.paymentMethod.code|int) }}
+            {% else %}
+                {{ payment.data.transaction.paymentMethod.code }}
+            {% endif %}
+        </td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Gross amount") }}</td>
+        <td class="text-primary">{{ pagseguro.order.shop.create_price(payment.data.transaction.grossAmount|float)|money }}</td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Net amount") }}</td>
+        <td class="text-success">{{ pagseguro.order.shop.create_price(payment.data.transaction.netAmount|float)|money }}</td>
+    </tr>
+
+    {% if payment.data.transaction.feeAmount %}
+    <tr>
+        <td>{{ _("Fee amount") }}</td>
+        <td class="text-danger">{{ pagseguro.order.shop.create_price(payment.data.transaction.feeAmount|float)|money }}</td>
+    </tr>
+    {% endif %}
+
+    {% if payment.data.transaction.creditorFees %}
+    <tr>
+        <td>{{ _("Intermediation rate amount") }}</td>
+        <td class="text-danger">{{ pagseguro.order.shop.create_price(payment.data.transaction.creditorFees.intermediationRateAmount|float)|money }}</td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Intermediation fee amount") }}</td>
+        <td class="text-danger">{{ pagseguro.order.shop.create_price(payment.data.transaction.creditorFees.intermediationFeeAmount|float)|money }}</td>
+    </tr>
+    {% endif %}
+
+    <tr>
+        <td>{{ _("Discount amount") }}</td>
+        <td class="text-warning">{{ pagseguro.order.shop.create_price(payment.data.transaction.discountAmount|float)|money }}</td>
+    </tr>
+
+    <tr>
+        <td>{{ _("Extra amount") }}</td>
+        <td class="text-warning">{{ pagseguro.order.shop.create_price(payment.data.transaction.extraAmount|float)|money }}</td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="text-center">
+            <button type="button" name="refreshButton" class="btn btn-primary btn-sm" onclick="refreshPayment('{{ payment.pk }}')">{{ _("Refresh transaction") }}</button>
+        </td>
+    </tr>
+</table>

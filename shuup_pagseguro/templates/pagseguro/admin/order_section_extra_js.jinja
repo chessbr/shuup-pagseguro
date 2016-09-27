@@ -1,0 +1,20 @@
+<script>
+    function refreshPayment(pk){
+        $("button[name='refreshButton']").prop("disabled", true);
+        $.ajax({
+            type: "POST",
+            url: "{{ url('shuup_admin:pagseguro.payment_refresh') }}",
+            data: {
+                "pk": pk,
+                "csrfmiddlewaretoken": '{{ csrf_token }}',
+            },
+            success: function(data){
+                location.reload();
+            },
+            error: function(response, error, errorThrown){
+                alert("{{ _("There was an error refreshing the transaction:") }}" + response.responseText)
+                $("button[name='refreshButton']").prop("disabled", false);
+            }
+        });
+    }
+</script>

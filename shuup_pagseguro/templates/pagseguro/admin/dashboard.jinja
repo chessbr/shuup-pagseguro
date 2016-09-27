@@ -1,0 +1,21 @@
+{% extends "shuup/admin/base.jinja" %}
+{% from "shuup/admin/macros/general.jinja" import content_block with context %}
+
+{% block content %}
+    {% call content_block("General information") %}
+
+        <p>{{ _("Configure these URLs in PagSeguro control panel:") }}</p>
+
+        <dl class="dl-horizontal">
+            <dt>{{ _("Notification URL") }}</dt>
+            <dd>{{ notification_url }}</dd>
+        </dl>
+
+        <dl class="dl-horizontal">
+            <dt>{{ _("Payment return URL") }}</dt>
+            <dd>{{ payment_return_url }}</dd>
+        </dl>
+
+        <p><small>{% trans %}Version:{% endtrans %} <strong>{{ VERSION }}</strong></small></p>
+    {% endcall %}
+{% endblock %}

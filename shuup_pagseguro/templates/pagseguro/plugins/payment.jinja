@@ -1,0 +1,57 @@
+{% if payment %}
+{% set payment_status = payment.data.transaction.status|int %}
+
+{% if order.payment_data.pagseguro.payment_link %}
+{% set payment_link = order.payment_data.pagseguro.payment_link %}
+{% elif payment.data.transaction.paymentLink %}
+{% set payment_link = payment.data.transaction.paymentLink %}
+{% endif %}
+
+<div class="card">
+    <h4 class="card-header bg-primary"><i class="fa fa-dollar"></i> {{ _("Payment information") }}</h4>
+    <div class="card-block">
+        <div class="card-text">
+
+            <div class="row">
+                <div class="col-xs-12 text-xs-center m-b-1">
+                    <img src="{{ static("img/pagseguro/pagseguro300x60.gif") }}" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <dl class="row">
+                        <dt class="col-md-5">{{ _("Transaction") }}</dt>
+                        <dd class="col-md-7">{{ payment.code }}</dd>
+                        <dt class="col-md-5">{{ _("Payment method") }}</dt>
+                        <dd class="col-md-7">
+                            {% if PagSeguroPaymentMethodCode.__dict__["_value2member_map_"].get(payment.data.transaction.paymentMethod.code|int) %}
+                                {{ PagSeguroPaymentMethodCode(payment.data.transaction.paymentMethod.code|int) }}
+                            {% else %}
+                                {{ payment.data.transaction.paymentMethod.code }}
+                            {% endif %}
+                        </dd>
+                        <dt class="col-md-5">{{ _("Status") }}</dt>
+                        <dd class="col-md-7">{{ PagSeguroTransactionCustomerStatus(payment_status) }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row">
+                {% if payment_status==PagSeguroTransactionCustomerStatus.WaitingPayment.value and payment_link %}
+                <div class="col-xs-12 text-xs-center">
+                    <a class="btn btn-lg btn-primary" href="{{ payment_link }}" target="_blank">
+                        {% if is_boleto %}
+                        <i class="fa fa-barcode"></i> {{ _("Generate boleto") }}
+                        {% else %}
+                        <i class="fa fa-money"></i> {{ _("Pay order") }}
+                        {% endif %}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}

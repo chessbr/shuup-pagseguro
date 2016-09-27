@@ -1,0 +1,154 @@
+{% extends "shuup/front/checkout/_base.jinja" %}
+{% from "shuup/front/macros/checkout.jinja" import buttons_container %}
+
+{% block checkout_phase_content %}
+<form role="form" method="post" id="pagseguro_form">
+    {% csrf_token %}
+
+    <div class="card card-block">
+        <h3 class="card-title text-xs-center">{{ payment_method.name }}</h3>
+        <div class="card-text">
+            <div id="loading" class="text-xs-center m-a-1">
+                <i class="fa fa-spinner fa-spin fa-3x"></i> <br>{{ _("Loading, please wait.") }}
+            </div>
+
+            <div id="processing" class="text-xs-center m-a-1">
+                <i class="fa fa-spinner fa-spin fa-3x"></i> <br>{{ _("Processing payment..") }}
+            </div>
+
+            {% if payment_method.choice_identifier != "BOLETO" %}
+            <fieldset class="form-group row" id="options">
+                <p class="col-xs-12 text-xs-center">{{ _("Select a bank option") }}</p>
+                <div class="col-xs-6 push-xs-4 push-md-5" id="payment-options"></div>
+            </fieldset>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <img class="img-fluid m-x-auto" src="{{ static("img/pagseguro/pagseguro300x60.gif") }}" />
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {# COMO O PAGAMENTO COM BOLETO É AUTOMATICO, NAO NECESSITA DE BOTÃO #}
+    {% if payment_method.choice_identifier != "BOLETO" %}
+        {% call buttons_container() %}
+        <div class="pull-right">
+            <button type="button" class="btn btn-primary btn-lg btn-default" id="process-transaction">
+                <i class="fa fa-check"></i> {% trans %}Continue{% endtrans %}
+            </button>
+        </div>
+        {% endcall %}
+    {% endif %}
+</form>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $(function(){
+        $("#processing").hide();
+
+        PagSeguroDirectPayment.setSessionId('{{ ps_session_id }}');
+
+        function payPagSeguro(paymentData){
+            $("#options").hide();
+            $("#loading").hide();
+            $("#processing").show();
+
+            if (paymentData == undefined)
+                paymentData = {};
+
+            paymentData.csrfmiddlewaretoken = "{{ csrf_token }}";
+            paymentData.senderHash = PagSeguroDirectPayment.getSenderHash();
+
+            $.post("{{ url("shuup:checkout", phase="payment") }}", paymentData)
+            .fail(function() {
+                alert("{{ _("An unexpected error occured. This page will be reloaded for a retry.") }}");
+            })
+            .always(function() {
+                window.location = "{{ url("shuup:checkout", phase=next_phase.identifier) }}";
+            });
+        }
+
+        {# QUANDO É BOLETO, FAZ O PAGAMENTO AUTOMATICAMENTE #}
+        {%- if payment_method.choice_identifier == "BOLETO" %}
+
+        function setReadyTimer(){
+            // aguarda 2 segundos para proseguir
+            window.setTimeout(function (){
+                checkReady();
+            }, 1000);
+        }
+
+        function checkReady(){
+            if(PagSeguroDirectPayment.getSenderHash() != undefined){
+                payPagSeguro({"paymentMethod": "boleto"});
+            }else{
+                setReadyTimer();
+            }
+        }
+
+        checkReady();
+
+        {# Somente carrega as opções de pagamentos se NÃO é BOLETO #}
+        {% else %}
+
+        $("#options").hide();
+
+        function addPaymentOption(value, label, icon){
+            var optionHTML = '<div class="form-check"><label class="form-check-label">';
+
+            if(value == "{{ current_bank_option|default('-') }}"){
+                optionHTML += '<input class="form-check-input" type="radio" name="payment_choice" value="' + value + '" checked>';
+            }else{
+                optionHTML += '<input class="form-check-input" type="radio" name="payment_choice" value="' + value + '">';
+            }
+
+            if (icon){
+                optionHTML += '<img src="https://stc.pagseguro.uol.com.br/' + icon + '" /> ';
+            }
+            optionHTML += label + '</label></div>';
+
+            $("#payment-options").append(optionHTML);
+        }
+
+        PagSeguroDirectPayment.getPaymentMethods({
+            success: function(response) {
+                $.each(response.paymentMethods, function(index, paymentMethod){
+                    if(paymentMethod.name == "{{ payment_method.choice_identifier }}"){
+                        $.each(paymentMethod.options, function(index2, paymentMethodOption){
+                            console.log(paymentMethodOption);
+                            if(paymentMethodOption.status == "AVAILABLE"){
+                                addPaymentOption(
+                                    paymentMethodOption.code,
+                                    paymentMethodOption.displayName,
+                                    paymentMethodOption.images.MEDIUM.path
+                                );
+                            }
+                        });
+                    }
+                });
+
+                $("#options").show();
+            },
+            error: function(response) {
+                //tratamento do erro
+            },
+            complete: function(response) {
+                $("#loading").hide();
+            }
+        });
+
+        $("#process-transaction").click(function (){
+            $("#process-transaction").prop("disabled", true);
+            var bankOption = $('input[name=payment_choice]:checked', '#pagseguro_form').val();
+            payPagSeguro({"paymentMethod": "eft", "bankOption":bankOption});
+        });
+
+        {% endif -%}
+    });
+</script>
+<script type="text/javascript" src="https://stc.sandbox.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js"></script>
+{% endblock %}
