@@ -177,7 +177,7 @@ msgstr "Ative esta opção para habilitar o modo desenvolvedor."
 
 #: models.py:116
 msgid "PagSeguro configuration"
-msgstr "Confifiguração PagSeguro"
+msgstr "Configuração PagSeguro"
 
 #: models.py:117
 msgid "PagSeguro configurations"
