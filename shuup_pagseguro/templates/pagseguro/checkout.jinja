@@ -47,9 +47,10 @@
 
 {% block extrajs %}
 <script>
-    $(function(){
-        $("#processing").hide();
+    $("#processing").hide();
+    $("#options").hide();
 
+    $(function(){
         PagSeguroDirectPayment.setSessionId('{{ ps_session_id }}');
 
         function payPagSeguro(paymentData){
@@ -94,8 +95,6 @@
 
         {# Somente carrega as opções de pagamentos se NÃO é BOLETO #}
         {% else %}
-
-        $("#options").hide();
 
         function addPaymentOption(value, label, icon){
             var optionHTML = '<div class="form-check"><label class="form-check-label">';
@@ -150,5 +149,11 @@
         {% endif -%}
     });
 </script>
-<script type="text/javascript" src="https://stc.sandbox.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js"></script>
+
+{% if pagseguro_config.sandbox %}
+    <script type="text/javascript" src="https://stc.sandbox.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js"></script>
+{% else %}
+    <script type="text/javascript" src="https://stc.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js"></script>
+{% endif %}
+
 {% endblock %}

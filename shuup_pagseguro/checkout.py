@@ -34,6 +34,7 @@ class PagSeguroCheckoutPhase(CheckoutPhaseViewMixin, TemplateView):
         context['ps_session_id'] = PagSeguro.create_from_config(self.request.shop.pagseguro_config).get_session_id()
         context['next_phase'] = self.next_phase
         context['payment_method'] = self.request.basket.payment_method
+        context['pagseguro_config'] = self.request.shop.pagseguro_config
         context['current_bank_option'] = self.storage.get("bank_option")
         return context
 
