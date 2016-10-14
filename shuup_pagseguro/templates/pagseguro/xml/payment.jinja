@@ -26,7 +26,7 @@
     <extraAmount>{{ '%0.2f'|format(extra_amount|float) }}</extraAmount>
 
     <sender>
-        <name>{{ order.customer.name }}</name>
+        <name>{{ order.shipping_address.name }}</name>
         <email>{{ order.email }}</email>
 
         {% if customer_cpf or customer_cnpj %}
