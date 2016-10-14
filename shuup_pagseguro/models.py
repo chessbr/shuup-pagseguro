@@ -85,7 +85,7 @@ class PagSeguroPaymentProcessor(PaymentProcessor):
 @python_2_unicode_compatible
 class PagSeguroPayment(models.Model):
     order = models.ForeignKey(Order, verbose_name=_("order"))
-    code = models.CharField(verbose_name=_("code"), max_length=32)
+    code = models.CharField(verbose_name=_("code"), max_length=40)
     last_update = models.DateTimeField(verbose_name=_("last update"), auto_now=True)
     data = JSONField(blank=True, null=True, verbose_name=_('pagseguro data'))
 
